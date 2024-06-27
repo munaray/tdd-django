@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% if title %}
+    <title>Munaray Django Blog - {{title}}</title>
+    {% else %}
+    <title>Munaray Django Blog</title>
+    {% endif %}
+</head>
+<body>
+    <header>
+        <a href="{% url "homepage" %}">Home</a>
+    </header>
+    {% block content %}
+
+    {% endblock content %}
+    <footer>
+        &copy; Munaray Django Blog <script>
+            new Date().getFullYear
+        </script>
+    </footer>
+
+</body>
+</html>
