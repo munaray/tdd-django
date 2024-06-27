@@ -1,11 +1,14 @@
 from http import HTTPStatus
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase
+from model_bakery import baker
 
 from .models import Post
 
 # Create your tests here.
 
+User = get_user_model()
 
 class PostModelTest(TestCase):
     def test_post_model_exist(self):
@@ -14,21 +17,15 @@ class PostModelTest(TestCase):
         self.assertEqual(posts, 0)
 
     def test_string_rep_of_objects(self):
-        post = Post.objects.create(title="Test Post", body="Test Body")
-
+        post = baker.make(Post)
         self.assertEqual(str(post), post.title)
+        self.assertTrue(isinstance(post, Post))
 
 
 class HomePageTest(TestCase):
     def setUp(self) -> None:
-        Post.objects.create(
-            title="sample post 1",
-            body="Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        )
-        Post.objects.create(
-            title="sample post 2",
-            body="Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        )
+        self.post1 = baker.make(Post)
+        self.post2 = baker.make(Post)
 
     def test_homepage_returns_correct_response(self):
         response = self.client.get("/")
@@ -39,16 +36,13 @@ class HomePageTest(TestCase):
     def test_homepage_return_post_list(self):
         response = self.client.get("/")
 
-        self.assertContains(response, "sample post 1")
-        self.assertContains(response, "sample post 2")
+        self.assertContains(response, self.post1.title)
+        self.assertContains(response, self.post2.title)
 
 
 class DetailPageTest(TestCase):
     def setUp(self) -> None:
-        self.post = Post.objects.create(
-            title="Learn react the easy way",
-            body="This is a step by step guide to learning react and nextjs",
-        )
+        self.post = baker.make(Post)
 
     def test_detail_page_returns_correct_response(self):
         response = self.client.get(self.post.get_absolute_url())
@@ -61,4 +55,18 @@ class DetailPageTest(TestCase):
 
         self.assertContains(response, self.post.title)
         self.assertContains(response, self.post.body)
-        self.assertContains(response, self.post.created_at)
+
+
+class PostAuthorTest(TestCase):
+    def setUp(self) -> None:
+        self.user = baker.make(User)
+        self.post = Post.objects.create(
+            title="test title", body="test body", author=self.user
+        )
+
+    def test_author_is_instance_of_user_model(self):
+        self.assertTrue(isinstance(self.user, User))
+
+    def test_post_belongs_to_user(self):
+        self.assertTrue(hasattr(self.post, "author"))
+        self.assertEqual(self.post.author, self.user)
